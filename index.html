@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HSK Vocabulary</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      text-align: center;
+      background: #f3f3f3;
+      color: #222;
+      margin-top: 60px;
+    }
+    h1 { margin-bottom: 30px; }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover { background: #0056b3; }
+    .section {
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body>
+  <h1>HSK Vocabulary</h1>
+  <p>Select a version to start learning</p>
+
+  <div class="section">
+    <h2>HSK 2.0</h2>
+    <div>
+      <button onclick="openLevel('2.0', 1)">Level 1</button>
+      <button onclick="openLevel('2.0', 2)">Level 2</button>
+      <button onclick="openLevel('2.0', 3)">Level 3</button>
+      <button onclick="openLevel('2.0', 4)">Level 4</button>
+      <button onclick="openLevel('2.0', 5)">Level 5</button>
+      <button onclick="openLevel('2.0', 6)">Level 6</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>HSK 3.0</h2>
+    <div>
+      <button onclick="openLevel('3.0', 1)">Level 1</button>
+      <button onclick="openLevel('3.0', 2)">Level 2</button>
+      <button onclick="openLevel('3.0', 3)">Level 3</button>
+      <button onclick="openLevel('3.0', 4)">Level 4</button>
+      <button onclick="openLevel('3.0', 5)">Level 5</button>
+      <button onclick="openLevel('3.0', 6)">Level 6</button>
+      <button onclick="openLevel('3.0', '7-9')">Level 7–9</button>
+    </div>
+  </div>
+
+  <script>
+    function openLevel(version, level) {
+      window.location.href = `viewer.html?version=2.0&level=${level}`;
+    }
+  </script>
+</body>
+</html>
