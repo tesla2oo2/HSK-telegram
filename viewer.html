@@ -5,71 +5,181 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HSK Viewer</title>
   <style>
-    body {
-      font-family: system-ui, sans-serif;
-      text-align: center;
-      background: #fff;
+    * {
+      box-sizing: border-box;
       margin: 0;
-      padding: 60px 20px 120px;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f5f5f5;
+    }
+
+    .viewer-container {
+      display: flex;
+      flex-direction: column;
+      width: 90%;
+      max-width: 500px;
+      height: 90vh;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .back-btn {
+      font-size: 20px;
+      margin-right: 15px;
+      cursor: pointer;
+      background: none;
+      border: none;
+    }
+
+    .header-title {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .card {
+      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
+      padding: 20px;
+      overflow: hidden;
+      text-align: center;
     }
-    .word { font-size: 80px; margin-bottom: 10px; }
-    .pinyin { font-size: 28px; color: #555; margin-bottom: 15px; }
-    .meaning { font-size: 20px; margin-bottom: 25px; line-height: 1.6; max-width: 90%; }
-    button {
-      font-size: 18px;
-      padding: 12px 28px;
-      border-radius: 10px;
-      margin: 10px;
-      border: none;
-      background: #cfd8e4;
-      color: #222;
-      cursor: pointer;
-    }
-    button:active { transform: translateY(1px); }
-    .nav {
-      position: fixed;
-      bottom: 50px;
-      left: 0;
-      right: 0;
+
+    .word-container {
+      width: 100%;
+      max-width: 400px;
+      height: 160px; /* fixed box */
       display: flex;
+      flex-direction: column;
       justify-content: center;
-      gap: 30px;
+      align-items: center;
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      background-color: #fafafa;
+      padding: 10px;
     }
-    #backBtn {
-      position: fixed;
-      bottom: 110px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #ddd;
+
+    .word {
+      font-size: 52px;
+      font-weight: bold;
+      margin-bottom: 10px;
     }
+
+    .pinyin {
+      font-size: 32px;
+      color: #555;
+    }
+
+    .meaning {
+      font-size: 16px;
+      color: #333;
+      overflow-y: auto;
+      max-height: 200px; /* scrollable if too long */
+      padding: 10px;
+      width: 100%;
+      border-top: 1px solid #eee;
+      margin-top: 10px;
+    }
+
+    .progress-container {
+      height: 6px;
+      background: #eee;
+      width: 100%;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: #4caf50;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
     .counter {
-      position: fixed;
-      bottom: 15px;
-      left: 50%;
-      transform: translateX(-50%);
+      text-align: center;
+      padding: 5px;
       font-size: 14px;
-      color: #777;
+      color: #555;
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 15px;
+      border-top: 1px solid #ddd;
+      background: #fafafa;
+      position: sticky;
+      bottom: 0;
+    }
+
+    .nav button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.2s;
+    }
+
+    .nav button.primary {
+      background: #4caf50;
+      color: #fff;
+    }
+
+    .nav button.primary:hover {
+      background: #43a047;
+    }
+
+    .nav button:hover {
+      background: #ddd;
     }
   </style>
 </head>
 <body>
-  <div id="word" class="word">Loading...</div>
-  <div id="pinyin" class="pinyin"></div>
-  <div id="meaning" class="meaning"></div>
+  <div class="viewer-container">
+    <div class="header">
+      <button id="backBtn" class="back-btn">←</button>
+      <h1 class="header-title">HSK Vocabulary</h1>
+    </div>
 
-  <button id="backBtn">Back</button>
-  <div class="nav">
-    <button id="prevBtn">⬅ Prev</button>
-    <button id="nextBtn">Next ➡</button>
+    <div class="card">
+      <div class="word-container">
+        <div id="word" class="word">加载中...</div>
+        <div id="pinyin" class="pinyin"></div>
+      </div>
+      <div id="meaning" class="meaning"></div>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <p class="counter" id="counter">0 / 0</p>
+
+    <div class="nav">
+      <button id="prevBtn">⬅ Prev</button>
+      <button id="nextBtn" class="primary">Next ➡</button>
+    </div>
   </div>
-  <div class="counter" id="counter"></div>
 
   <script>
     const BASE_URL = "https://raw.githubusercontent.com/tesla2oo2/hskjson/main/";
-
     const params = new URLSearchParams(window.location.search);
     const version = params.get("version");
     const level = params.get("level");
@@ -84,44 +194,32 @@
 
       try {
         const res = await fetch(BASE_URL + filename);
-        if (!res.ok) throw new Error("HTTP " + res.status);
         words = await res.json();
-
-        if (!Array.isArray(words)) {
-          if (words.words) words = words.words;
-          else if (words.data) words = words.data;
-        }
-
+        if (words.words) words = words.words;
+        if (words.data) words = words.data;
         showWord();
       } catch (err) {
-        document.getElementById("word").textContent = "Failed to load: " + err.message;
+        document.getElementById("word").textContent = "Error loading words.";
       }
     }
 
     function showWord() {
       if (!words.length) return;
       const w = words[index];
-      const hanzi = w.simplified || w.hanzi || w.character || w.word || "";
-      const pinyin = w.pinyin || (w.forms && w.forms[0]?.transcriptions?.pinyin) || "";
-      const meaning = w.definition || w.meaning || (w.forms && w.forms[0]?.meanings?.join("; ")) || "";
+      const hanzi = w.simplified || w.hanzi || w.word || "";
+      const pinyin = w.pinyin || w.forms?.[0]?.transcriptions?.pinyin || "";
+      const meaning = w.definition || w.forms?.[0]?.meanings?.join("; ") || "";
 
       document.getElementById("word").textContent = hanzi;
       document.getElementById("pinyin").textContent = pinyin;
       document.getElementById("meaning").textContent = meaning;
       document.getElementById("counter").textContent = `${index + 1} / ${words.length}`;
+      document.getElementById("progressBar").style.width = `${((index + 1) / words.length) * 100}%`;
     }
 
-    document.getElementById("nextBtn").onclick = () => {
-      if (index < words.length - 1) index++;
-      showWord();
-    };
-    document.getElementById("prevBtn").onclick = () => {
-      if (index > 0) index--;
-      showWord();
-    };
-    document.getElementById("backBtn").onclick = () => {
-      window.location.href = "index.html";
-    };
+    document.getElementById("nextBtn").onclick = () => { if (index < words.length - 1) index++; showWord(); };
+    document.getElementById("prevBtn").onclick = () => { if (index > 0) index--; showWord(); };
+    document.getElementById("backBtn").onclick = () => { window.location.href = "index.html"; };
 
     loadWords();
   </script>
