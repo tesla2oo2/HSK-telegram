@@ -1,133 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HSK Vocabulary</title>
-<style>
-  body {
-    font-family: system-ui, sans-serif;
-    background-color: #fafafa;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 100vh;
-  }
-
-  .word-card {
-    text-align: center;
-    margin-top: 50px;
-    padding: 20px;
-    max-width: 90%;
-    background-color: #fff;
-    border-radius: 16px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  }
-
-  .character {
-    font-size: 64px;
-    margin-bottom: 10px;
-  }
-
-  .pinyin {
-    font-size: 28px;
-    color: #555;
-    margin-bottom: 10px;
-  }
-
-  .definition {
-    font-size: 22px;
-    color: #333;
-    margin-bottom: 20px;
-  }
-
-  .controls {
-    display: flex;
-    justify-content: space-between;
-    width: 90%;
-    margin-bottom: 80px;
-  }
-
-  button {
-    font-size: 18px;
-    padding: 14px 24px;
-    border: none;
-    border-radius: 10px;
-    background-color: #ddd;
-    color: #333;
-    cursor: pointer;
-    transition: 0.2s;
-  }
-
-  button:hover {
-    background-color: #ccc;
-  }
-
-  .back-btn {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #ddd;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HSK Viewer</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      text-align: center;
+      background: #fff;
+      margin: 0;
+      padding: 60px 20px 120px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .word { font-size: 80px; margin-bottom: 10px; }
+    .pinyin { font-size: 28px; color: #555; margin-bottom: 15px; }
+    .meaning { font-size: 20px; margin-bottom: 25px; line-height: 1.6; max-width: 90%; }
+    button {
+      font-size: 18px;
+      padding: 12px 28px;
+      border-radius: 10px;
+      margin: 10px;
+      border: none;
+      background: #cfd8e4;
+      color: #222;
+      cursor: pointer;
+    }
+    button:active { transform: translateY(1px); }
+    .nav {
+      position: fixed;
+      bottom: 50px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+    }
+    #backBtn {
+      position: fixed;
+      bottom: 110px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ddd;
+    }
+    .counter {
+      position: fixed;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      color: #777;
+    }
+  </style>
 </head>
 <body>
+  <div id="word" class="word">Loading...</div>
+  <div id="pinyin" class="pinyin"></div>
+  <div id="meaning" class="meaning"></div>
 
-<div class="word-card">
-  <div class="character" id="character"></div>
-  <div class="pinyin" id="pinyin"></div>
-  <div class="definition" id="definition"></div>
-</div>
+  <button id="backBtn">Back</button>
+  <div class="nav">
+    <button id="prevBtn">⬅ Prev</button>
+    <button id="nextBtn">Next ➡</button>
+  </div>
+  <div class="counter" id="counter"></div>
 
-<div class="controls">
-  <button id="prev">⬅ Prev</button>
-  <button id="next">Next ➡</button>
-</div>
+  <script>
+    const BASE_URL = "https://raw.githubusercontent.com/tesla2oo2/hskjson/main/";
 
-<button class="back-btn" onclick="goBack()">← Back</button>
+    const params = new URLSearchParams(window.location.search);
+    const version = params.get("version");
+    const level = params.get("level");
 
-<script>
-  const urlParams = new URLSearchParams(window.location.search);
-  const version = urlParams.get('version');
-  const level = urlParams.get('level');
+    let words = [];
+    let index = 0;
 
-  const dataUrl = `https://raw.githubusercontent.com/<your-username>/hskjson/main/hsk${level}${version === '2.0' ? '' : 'n'}.json`;
+    async function loadWords() {
+      let filename;
+      if (version === "2.0") filename = `hsk${level}.json`;
+      else filename = (level === "7-9") ? "hsk7-9n.json" : `hsk${level}n.json`;
 
-  let words = [];
-  let currentIndex = 0;
+      try {
+        const res = await fetch(BASE_URL + filename);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        words = await res.json();
 
-  fetch(dataUrl)
-    .then(response => response.json())
-    .then(data => {
-      words = data;
-      showWord(currentIndex);
-    });
+        if (!Array.isArray(words)) {
+          if (words.words) words = words.words;
+          else if (words.data) words = words.data;
+        }
 
-  function showWord(index) {
-    if (!words[index]) return;
-    document.getElementById('character').textContent = words[index].hanzi;
-    document.getElementById('pinyin').textContent = words[index].pinyin;
-    document.getElementById('definition').textContent = words[index].definition;
-  }
+        showWord();
+      } catch (err) {
+        document.getElementById("word").textContent = "Failed to load: " + err.message;
+      }
+    }
 
-  document.getElementById('next').addEventListener('click', () => {
-    if (currentIndex < words.length - 1) currentIndex++;
-    showWord(currentIndex);
-  });
+    function showWord() {
+      if (!words.length) return;
+      const w = words[index];
+      const hanzi = w.simplified || w.hanzi || w.character || w.word || "";
+      const pinyin = w.pinyin || (w.forms && w.forms[0]?.transcriptions?.pinyin) || "";
+      const meaning = w.definition || w.meaning || (w.forms && w.forms[0]?.meanings?.join("; ")) || "";
 
-  document.getElementById('prev').addEventListener('click', () => {
-    if (currentIndex > 0) currentIndex--;
-    showWord(currentIndex);
-  });
+      document.getElementById("word").textContent = hanzi;
+      document.getElementById("pinyin").textContent = pinyin;
+      document.getElementById("meaning").textContent = meaning;
+      document.getElementById("counter").textContent = `${index + 1} / ${words.length}`;
+    }
 
-  function goBack() {
-    window.location.href = "index.html";
-  }
-</script>
+    document.getElementById("nextBtn").onclick = () => {
+      if (index < words.length - 1) index++;
+      showWord();
+    };
+    document.getElementById("prevBtn").onclick = () => {
+      if (index > 0) index--;
+      showWord();
+    };
+    document.getElementById("backBtn").onclick = () => {
+      window.location.href = "index.html";
+    };
 
+    loadWords();
+  </script>
 </body>
 </html>
